@@ -1,5 +1,5 @@
 import logging
-from .const import CONF_BATTERIES_COUNT, CONF_BATTERY_CAPACITY, CONF_MAX_SOC, CONF_SMA_SAMPLES, MIN_CHARGING_CURRENT, MIN_ONLINE_CURRENT
+from .const import CONF_BATTERIES_COUNT, CONF_BATTERY_CAPACITY, CONF_I2C_ADDR, CONF_SCAN_INTERVAL, CONF_MAX_SOC, CONF_SMA_SAMPLES, MIN_CHARGING_CURRENT, MIN_ONLINE_CURRENT
 from .ina219 import INA219
 from .ina219_wrapper import INA219Wrapper
 from homeassistant import core
@@ -21,22 +21,23 @@ class INA219UpsHatCoordinator(DataUpdateCoordinator):
         self.name_prefix = config.get(CONF_NAME)
         self.id_prefix = config.get(CONF_UNIQUE_ID)
 
+        self.update_interval = config.get(CONF_SCAN_INTERVAL)
+
         self._max_soc = config.get(CONF_MAX_SOC)
         self._battery_capacity = config.get(CONF_BATTERY_CAPACITY)
         self._batteries_count = config.get(CONF_BATTERIES_COUNT)
         self._sma_samples = config.get(CONF_SMA_SAMPLES)
 
-        self._ina219 = INA219(addr=0x41)
+        self._ina219 = INA219(addr=config.get(CONF_I2C_ADDR))
         self._ina219_wrapper = INA219Wrapper(self._ina219, self._sma_samples)
 
         super().__init__(
             hass,
             _LOGGER,
-            name="ina219_ups_hat",
-            update_method=self._update_data,
+            name="ina219_ups_hat"
         )
 
-    async def _update_data(self):
+    async def _async_update_data(self):
         try:
             ina219_wrapper = self._ina219_wrapper
             ina219_wrapper.measureINAValues()
@@ -85,7 +86,7 @@ class INA219UpsHatCoordinator(DataUpdateCoordinator):
                 "current": round(current / 1000, 5),
                 "power": round(power_calculated, 2),
                 "soc": round(soc, 1),
-                "remaining_battery_capacity": round(remaining_battery_capacity, 0),
+                "remaining_battery_capacity": round(remaining_battery_capacity, 0) if remaining_battery_capacity is not None else None,
                 "remaining_time": remaining_time,
                 "online": online,
                 "charging": charging,

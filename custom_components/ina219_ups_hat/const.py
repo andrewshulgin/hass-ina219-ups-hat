@@ -5,8 +5,10 @@ LOW_BATTERY_PERCENTAGE = 20
 
 DOMAIN = "ina219_ups_hat"
 DEFAULT_NAME = "ina219_ups_hat"
+DEFAULT_I2C_ADDR = 0x42
 
 CONF_BATTERY_CAPACITY = "battery_capacity"
+CONF_I2C_ADDR = "i2c_addr"
 CONF_MAX_SOC = "max_soc"
 CONF_SMA_SAMPLES = "sma_samples"
 CONF_BATTERIES_COUNT = "batteries_count"

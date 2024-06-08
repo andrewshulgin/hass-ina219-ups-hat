@@ -25,10 +25,12 @@ from .coordinator import INA219UpsHatCoordinator
 from .const import (
     CONF_BATTERIES_COUNT,
     CONF_BATTERY_CAPACITY,
+    CONF_I2C_ADDR,
     CONF_MAX_SOC,
     CONF_SCAN_INTERVAL,
     CONF_SMA_SAMPLES,
     DEFAULT_NAME,
+    DEFAULT_I2C_ADDR,
     DOMAIN,
 )
 
@@ -39,10 +41,12 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_I2C_ADDR, default=DEFAULT_I2C_ADDR): cv.positive_int,
         vol.Optional(CONF_MAX_SOC, default=100): cv.positive_int,
         vol.Optional(CONF_BATTERY_CAPACITY): cv.positive_int,
         vol.Optional(CONF_BATTERIES_COUNT, default=2): cv.positive_int,
         vol.Optional(CONF_SMA_SAMPLES, default=5): cv.positive_int,
+        vol.Optional(CONF_SCAN_INTERVAL, default=1): cv.time_period,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -55,7 +59,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     coordinator = INA219UpsHatCoordinator(hass, config)
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     sensors = [
         VoltageSensor(coordinator),
@@ -74,8 +78,7 @@ async def async_setup_platform(
     async def async_update_data(now):
         await coordinator.async_request_refresh()
 
-    async_track_time_interval(hass, async_update_data,
-                              config.get(CONF_SCAN_INTERVAL))
+    # async_track_time_interval(hass, async_update_data, timedelta(seconds=config.get(CONF_SCAN_INTERVAL)))
 
 
 class INA219UpsHatSensor(INA219UpsHatEntity, SensorEntity):

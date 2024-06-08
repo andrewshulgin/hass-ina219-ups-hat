@@ -21,6 +21,7 @@ async def async_setup_platform(
         return
 
     coordinator = discovery_info.get("coordinator")
+    await coordinator.async_refresh()
 
     sensors = [
         OnlineBinarySensor(coordinator),
